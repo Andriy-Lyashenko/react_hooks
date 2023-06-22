@@ -13,10 +13,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Get commit hash
-        id: get_commit_hash
-        run: echo "::set-output name=commit_hash::$(git rev-parse HEAD)"
-
       - name: Get latest tag
         id: get_latest_tag
         run: |
@@ -26,12 +22,12 @@ jobs:
       - name: Generate new tag version
         id: generate_new_tag
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+          if [ "${{ github.ref }}" = "refs/heads/master" ]; then
             OLD_TAG="${{ steps.get_latest_tag.outputs.tag }}"
             OLD_VERSION="${OLD_TAG:1}"
             IFS='.' read -ra VERSION_PARTS <<< "$OLD_VERSION"
-            MAJOR=${VERSION_PARTS[0]}
-            MINOR=${VERSION_PARTS[1]}
+            MAJOR="${VERSION_PARTS[0]}"
+            MINOR="${VERSION_PARTS[1]}"
             PATCH=$((VERSION_PARTS[2] + 1))
             NEW_TAG="v$MAJOR.$MINOR.$PATCH"
             echo "::set-output name=new_tag::$NEW_TAG"
@@ -39,7 +35,7 @@ jobs:
 
       - name: Create Git tag
         run: |
-          if [[ -n "${{ steps.generate_new_tag.outputs.new_tag }}" ]]; then
-            git tag ${{ steps.generate_new_tag.outputs.new_tag }} ${{ steps.get_commit_hash.outputs.commit_hash }}
+          if [ -n "${{ steps.generate_new_tag.outputs.new_tag }}" ]; then
+            git tag ${{ steps.generate_new_tag.outputs.new_tag }}
             git push origin ${{ steps.generate_new_tag.outputs.new_tag }}
           fi
