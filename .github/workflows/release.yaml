@@ -1,4 +1,4 @@
-name: Update Tag Version
+name: Update Tag
 
 on:
   push:
@@ -13,15 +13,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Get latest tag
-        id: get_latest_tag
-        run: echo "::set-output name=tag::$(git describe --abbrev=0 --tags)"
-
-      - name: Generate new tag version
-        id: generate_new_tag
-        run: echo "::set-output name=new_tag::v$(node increment_version.js ${{ steps.get_latest_tag.outputs.tag }})"
-
-      - name: Create Git tag
+      - name: Determine previous tag version
+        id: previous_tag
         run: |
-          git tag ${{ steps.generate_new_tag.outputs.new_tag }}
-          git push origin ${{ steps.generate_new_tag.outputs.new_tag }}
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0)
+          echo "::set-output name=previous_tag::$PREVIOUS_TAG"
+
+      - name: Increment tag version
+        id: increment_version
+        run: |
+          PREVIOUS_TAG=$PREVIOUS_TAG
+          IFS='.' read -ra VERSION_PARTS <<< "$PREVIOUS_TAG"
+          MAJOR=${VERSION_PARTS[0]}
+          MINOR=${VERSION_PARTS[1]}
+          PATCH=$((${VERSION_PARTS[2]} + 1))
+          NEW_TAG="$MAJOR.$MINOR.$PATCH"
+          echo "::set-output name=new_tag::$NEW_TAG"
+
+      - name: Create and push updated tag
+        run: |
+          git tag ${{ steps.increment_version.outputs.new_tag }}
+          git push origin ${{ steps.increment_version.outputs.new_tag }}
