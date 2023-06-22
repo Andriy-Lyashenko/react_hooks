@@ -15,18 +15,13 @@ jobs:
 
       - name: Get latest tag
         id: get_latest_tag
-        run: echo "::set-output name=tag::$(git describe --abbrev=0 --tags $(git rev-list --tags --max-count=1))"
+        run: echo "::set-output name=tag::$(git describe --abbrev=0 --tags)"
 
       - name: Generate new tag version
         id: generate_new_tag
         run: |
           OLD_TAG="${{ steps.get_latest_tag.outputs.tag }}"
-          OLD_VERSION="${OLD_TAG:1}"
-          IFS='.' read -ra VERSION_PARTS <<< "$OLD_VERSION"
-          MAJOR=${VERSION_PARTS[0]}
-          MINOR=${VERSION_PARTS[1]}
-          PATCH=$((VERSION_PARTS[2] + 1))
-          NEW_TAG="v$MAJOR.$MINOR.$PATCH"
+          NEW_TAG="${OLD_TAG/v/v}"
           echo "::set-output name=new_tag::$NEW_TAG"
 
       - name: Create Git tag
