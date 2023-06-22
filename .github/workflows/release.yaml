@@ -15,7 +15,7 @@ jobs:
 
       - name: Get latest tag
         id: get_latest_tag
-        run: echo "::set-output name=tag::$(git describe --abbrev=0 --tags)"
+        run: echo "::set-output name=tag::$(git describe --abbrev=0 --tags $(git rev-list --tags --max-count=1))"
 
       - name: Generate new tag version
         id: generate_new_tag
