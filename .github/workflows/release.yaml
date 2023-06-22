@@ -31,3 +31,4 @@ jobs:
           release_name: Release ${{ github.sha }}
           draft: false
           prerelease: false
+          body: Automated release for ${{ github.sha }}
