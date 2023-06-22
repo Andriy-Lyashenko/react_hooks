@@ -1,4 +1,4 @@
-name: Create Release
+name: Update Tag Version
 
 on:
   push:
@@ -6,32 +6,22 @@ on:
       - master
 
 jobs:
-  release:
+  update_tag:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Git
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+      - name: Get latest tag
+        id: get_latest_tag
+        run: echo "::set-output name=tag::$(git describe --abbrev=0 --tags)"
+
+      - name: Generate new tag version
+        id: generate_new_tag
+        run: echo "::set-output name=new_tag::v$(node increment_version.js ${{ steps.get_latest_tag.outputs.tag }})"
 
       - name: Create Git tag
         run: |
-          git tag -a ${{ github.sha }} -m "Automated tag for ${{ github.sha }}"
-          git push origin ${{ github.sha }}
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.sha }}
-          release_name: "Release ${{ github.sha }}"
-          draft: false
-          prerelease: false
-          body: |
-            Automated release for ${{ github.sha }}
+          git tag ${{ steps.generate_new_tag.outputs.new_tag }}
+          git push origin ${{ steps.generate_new_tag.outputs.new_tag }}
