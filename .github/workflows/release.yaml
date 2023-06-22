@@ -26,16 +26,20 @@ jobs:
       - name: Generate new tag version
         id: generate_new_tag
         run: |
-          OLD_TAG="${{ steps.get_latest_tag.outputs.tag }}"
-          OLD_VERSION="${OLD_TAG:1}"
-          IFS='.' read -ra VERSION_PARTS <<< "$OLD_VERSION"
-          MAJOR=${VERSION_PARTS[0]}
-          MINOR=${VERSION_PARTS[1]}
-          PATCH=$((VERSION_PARTS[2] + 1))
-          NEW_TAG="v$MAJOR.$MINOR.$PATCH"
-          echo "::set-output name=new_tag::$NEW_TAG"
+          if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            OLD_TAG="${{ steps.get_latest_tag.outputs.tag }}"
+            OLD_VERSION="${OLD_TAG:1}"
+            IFS='.' read -ra VERSION_PARTS <<< "$OLD_VERSION"
+            MAJOR=${VERSION_PARTS[0]}
+            MINOR=${VERSION_PARTS[1]}
+            PATCH=$((VERSION_PARTS[2] + 1))
+            NEW_TAG="v$MAJOR.$MINOR.$PATCH"
+            echo "::set-output name=new_tag::$NEW_TAG"
+          fi
 
       - name: Create Git tag
         run: |
-          git tag ${{ steps.generate_new_tag.outputs.new_tag }} ${{ steps.get_commit_hash.outputs.commit_hash }}
-          git push origin ${{ steps.generate_new_tag.outputs.new_tag }}
+          if [[ -n "${{ steps.generate_new_tag.outputs.new_tag }}" ]]; then
+            git tag ${{ steps.generate_new_tag.outputs.new_tag }} ${{ steps.get_commit_hash.outputs.commit_hash }}
+            git push origin ${{ steps.generate_new_tag.outputs.new_tag }}
+          fi
