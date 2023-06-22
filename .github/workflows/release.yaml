@@ -13,18 +13,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Get commit hash
+        id: get_commit_hash
+        run: echo "::set-output name=commit_hash::$(git rev-parse HEAD)"
+
       - name: Get latest tag
         id: get_latest_tag
-        run: echo "::set-output name=tag::$(git describe --abbrev=0 --tags)"
+        run: |
+          git fetch --tags --force --prune
+          git describe --abbrev=0 --tags "$(git rev-list --tags --max-count=1)"
 
       - name: Generate new tag version
         id: generate_new_tag
         run: |
           OLD_TAG="${{ steps.get_latest_tag.outputs.tag }}"
-          NEW_TAG="${OLD_TAG/v/v}"
+          OLD_VERSION="${OLD_TAG:1}"
+          IFS='.' read -ra VERSION_PARTS <<< "$OLD_VERSION"
+          MAJOR=${VERSION_PARTS[0]}
+          MINOR=${VERSION_PARTS[1]}
+          PATCH=$((VERSION_PARTS[2] + 1))
+          NEW_TAG="v$MAJOR.$MINOR.$PATCH"
           echo "::set-output name=new_tag::$NEW_TAG"
 
       - name: Create Git tag
         run: |
-          git tag ${{ steps.generate_new_tag.outputs.new_tag }}
+          git tag ${{ steps.generate_new_tag.outputs.new_tag }} ${{ steps.get_commit_hash.outputs.commit_hash }}
           git push origin ${{ steps.generate_new_tag.outputs.new_tag }}
