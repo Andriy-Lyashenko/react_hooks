@@ -1,4 +1,5 @@
 name: Create Release
+
 on:
   push:
     branches:
@@ -7,6 +8,7 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -28,7 +30,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.sha }}
-          release_name: Release ${{ github.sha }}
+          release_name: "Release ${{ github.sha }}"
           draft: false
           prerelease: false
-          body: Automated release for ${{ github.sha }}
+          body: |
+            Automated release for ${{ github.sha }}
