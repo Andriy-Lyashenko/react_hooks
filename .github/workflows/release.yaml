@@ -21,8 +21,7 @@ jobs:
         id: generate_new_tag
         run: |
           OLD_TAG="${{ steps.get_latest_tag.outputs.stdout }}"
-          OLD_VERSION="${OLD_TAG:1}"
-          IFS='.' read -ra VERSION_PARTS <<< "$OLD_VERSION"
+          IFS='.' read -ra VERSION_PARTS <<< "$(echo $OLD_TAG | cut -c 2-)"
           MAJOR="${VERSION_PARTS[0]}"
           MINOR="${VERSION_PARTS[1]}"
           PATCH=$((VERSION_PARTS[2] + 1))
