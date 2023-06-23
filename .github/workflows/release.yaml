@@ -3,7 +3,7 @@ name: Update Tag Version
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   update_tag:
