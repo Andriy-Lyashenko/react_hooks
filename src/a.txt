@@ -1,0 +1,36 @@
+name: Update Tag
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  update_tag:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Get latest tag
+        id: get_latest_tag
+        run: |
+          TAG=$(curl --header "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" --header "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/${{ github.repository }}/tags" | jq -r '.[0].name')
+          echo "::set-output name=tag::$TAG"
+
+      - name: Generate new tag version
+        id: generate_new_tag
+        run: |
+          OLD_TAG="${{ steps.get_latest_tag.outputs.tag }}"
+          IFS='.' read -ra VERSION_PARTS <<< "${OLD_TAG#v}"
+          MAJOR="${VERSION_PARTS[0]}"
+          MINOR="${VERSION_PARTS[1]}"
+          PATCH=$((VERSION_PARTS[2] + 1))
+          NEW_TAG="v$MAJOR.$MINOR.$PATCH"
+          echo "::set-output name=new_tag::$NEW_TAG"
+
+      - name: Create Git tag
+        run: |
+          git tag ${{ steps.generate_new_tag.outputs.new_tag }}
+          git push origin ${{ steps.generate_new_tag.outputs.new_tag }}
