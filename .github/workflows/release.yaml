@@ -1,12 +1,12 @@
+name: Update Tag Version
+
 on:
   push:
     branches:
       - main
 
-name: Update Tag Version
-
 jobs:
-  build:
+  update_tag:
     name: Update Tag
     runs-on: ubuntu-latest
     steps:
