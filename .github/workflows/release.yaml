@@ -17,7 +17,7 @@ jobs:
         id: get_latest_tag
         run: echo "::set-output name=tag::$(git describe --abbrev=0 --tags)"
 
-    - name: Generate new tag version
+      - name: Generate new tag version
         id: generate_new_tag
         run: |
           OLD_TAG="${{ steps.get_latest_tag.outputs.tag }}"
